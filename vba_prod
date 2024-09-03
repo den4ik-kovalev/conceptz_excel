@@ -1,0 +1,5 @@
+Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean)
+If Not Application.Intersect(Target, Range("B:B")) Is Nothing Then
+   Call Shell(ThisWorkbook.Path & "\conceptz.exe " & ThisWorkbook.Path & "\" & ThisWorkbook.Name & " " & Target)
+End If
+End Sub

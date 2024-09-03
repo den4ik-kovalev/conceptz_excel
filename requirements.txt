@@ -1,0 +1,7 @@
+Jinja2==3.1.4
+  - MarkupSafe [required: >=2.0, installed: 2.1.5]
+loguru==0.7.2
+  - colorama [required: >=0.3.4, installed: 0.4.6]
+  - win32-setctime [required: >=1.0.0, installed: 1.1.0]
+openpyxl==3.1.5
+  - et-xmlfile [required: Any, installed: 1.1.0]

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ concept_row["Name"] }}</title>
+    <!-- Подключение Google Fonts и FontAwesome -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        /* Стили для темной темы и отступов */
+        body {
+            background: linear-gradient(135deg, #121212, #323232); /* Градиентный фон */
+            color: #ffffff;
+            margin: 0;
+            padding: 20px;
+            font-family: 'Roboto', sans-serif; /* Современный шрифт */
+            font-size: 18px;
+            line-height: 1.6;
+        }
+
+        /* Стили для контейнера документа */
+        .content-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            max-width: 800px; /* Ограничение ширины контента */
+            margin: auto; /* Центрирование контента */
+            padding: 20px; /* Внутренние отступы для рамки */
+            outline: 2px solid #87CEFA; /* Тонкая рамка вокруг всего документа */
+            outline-offset: 20px; /* Отступ рамки от края */
+        }
+
+        /* Стили для блока с описанием концепта и параграфов */
+        .description, .info-paragraph, .sources, .examples {
+            background-color: rgba(31, 31, 31, 0.85); /* Полупрозрачный фон */
+            padding: 30px; /* Увеличенные внутренние отступы */
+            border-radius: 10px; /* Скругленные углы */
+            margin-bottom: 30px; /* Увеличенный отступ снизу */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Тень */
+        }
+
+        /* Стили для изображений */
+        img {
+            width: 50%;
+            height: auto;
+            display: block;
+            margin: 20px auto;
+            border-radius: 10px; /* Скругленные углы для изображений */
+        }
+
+        /* Стили для подписей к изображениям */
+        .caption {
+            display: block;
+            text-align: center;
+            font-size: 16px;
+            color: #87CEFA; /* Светло-голубой цвет подписей */
+            margin-top: -10px;
+            margin-bottom: 40px; /* Увеличенное расстояние снизу */
+            text-decoration: none; /* Убираем подчеркивание */
+        }
+
+        /* Стили для ссылок */
+        a {
+            color: inherit; /* Цвет текста */
+            text-decoration: none;
+            transition: color 0.3s ease-in-out; /* Плавный переход цвета при наведении */
+        }
+
+        a:hover {
+            color: #87CEFA; /* Светло-голубой цвет при наведении */
+        }
+
+        /* Стили для заголовков */
+        h1, h2 {
+            color: #87CEFA; /* Светло-голубой цвет заголовков */
+            text-transform: uppercase; /* Верхний регистр */
+            font-weight: 700;
+            margin-bottom: 20px;
+            letter-spacing: 1px; /* Расстояние между буквами */
+        }
+
+        /* Анимация появления элементов */
+        .info-paragraph, .description, .sources, .examples {
+            animation: fadeIn 2s ease-in-out; /* Плавное появление */
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        /* Стили для списка источников и примеров */
+        ul {
+            list-style: square;
+            padding: 0;
+        }
+
+        li {
+            margin: 10px 0;
+        }
+
+        /* Адаптивный дизайн */
+        @media (max-width: 768px) {
+            img {
+                width: 80%;
+            }
+
+            .content-container {
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="content-container">
+        <!-- Заголовок страницы -->
+        <h1>{{ concept_row["Name"] }}</h1>
+
+        {% if concept_row["Description"] %}
+        <!-- Краткое описание концепта -->
+        <div class="description">
+            <p>{{ concept_row["Description"] }}</p>
+        </div>
+        {% endif %}
+
+        {% set rows = info_rows|selectattr("Type", "in", ["note", "screenshot"]) %}
+        {% if rows %}
+        <!-- Раздел Информация -->
+        <h2>Информация <i class="fas fa-info-circle"></i></h2>
+
+        {% for row in rows %}
+        {% if row["Type"] == "screenshot" %}
+        <img src="{{ row['Screenshot'] }}" alt="{{ row['Text'] or '' }}">
+        {% if row["Source link"] or row["Text"] %}
+        <a href="{{ row['Source link'] or '#' }}" class="caption" target="_blank">{{ row['Text'] or 'Источник' }}</a>
+        {% endif %}
+        {% else %}
+        <a href="{{ row['Source link'] or '#' }}" target="_blank">
+            <div class="info-paragraph">
+                <p>{{ row['Text'] }}</p>
+            </div>
+        </a>
+        {% endif %}
+        {% endfor %}
+        {% endif %}
+
+        {% set rows = info_rows|selectattr("Type", "equalto", "source") %}
+        {% if rows %}
+        <!-- Раздел Источники -->
+        <h2>Источники <i class="fas fa-book"></i></h2>
+        <div class="sources">
+            <ul>
+                {% for row in rows %}
+                <li><a href="{{ row['Source link'] or '#' }}" target="_blank">{{ row['Source name'] }}</a></li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+        {% set rows = info_rows|selectattr("Type", "equalto", "example") %}
+        {% if rows %}
+        <!-- Раздел Примеры -->
+        <h2>Примеры <i class="fas fa-lightbulb"></i></h2>
+        <div class="examples">
+            <ul>
+                {% for row in rows %}
+                {% if row['Source link'] %}
+                <li><a href="{{ row['Source link'] }}" target="_blank">{{ row['Text'] }}</a></li>
+                {% else %}
+                <li>{{ row['Text'] }}</li>
+                {% endif %}
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %}
+
+    </div>
+</body>
+</html>

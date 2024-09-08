@@ -14,7 +14,6 @@ import os
 import sys
 import webbrowser
 from pathlib import Path
-from typing import Iterator
 
 import openpyxl
 from jinja2 import Template
@@ -34,57 +33,94 @@ logger.add(LOGGER_PATH, format="{time} | {level} | {message}", level="INFO")
 os.makedirs(HTML_DIR, exist_ok=True)
 
 
-def get_excel_rows(
-    filepath: Path,
-    sheet_idx: int = 0,
-    filter_key: str = None,
-    filter_value: str = None
-) -> Iterator[dict]:
-
-    wb = openpyxl.load_workbook(filepath, read_only=True)
-    ws = wb.worksheets[sheet_idx]
-    if ws.max_row == 0:
-        return
-
-    keys = [
-        ws.cell(1, column).value
-        for column in range(1, ws.max_column + 1)
-    ]
-
-    for row in range(2, ws.max_row + 1):
-        dct = {
-            key: ws.cell(row, column).value
-            for column, key in enumerate(keys, start=1)
-            if key is not None
-        }
-        if filter_key:
-            if dct[filter_key] == filter_value:
-                yield dct
-            else:
-                continue
-        else:
-            yield dct
-
-
 @logger.catch
 def main():
 
     parser = argparse.ArgumentParser(description='Conceptz for Excel')
     parser.add_argument("xls_path", type=str, help="Data file")
     parser.add_argument("concept_name", type=str, help="Concept name")
+    parser.add_argument("--read_only", type=bool, default=False, help="Open xls in read only mode")
     args = parser.parse_args()
     logger.info(args.xls_path)
     logger.info(args.concept_name)
 
     xls_path = Path(args.xls_path)
     concept_name = args.concept_name
+    read_only = args.read_only
 
-    concept_row = get_excel_rows(xls_path, CONCEPTS_SHEET_IDX, filter_key="Name", filter_value=concept_name)
-    concept_row = list(concept_row)[0]
-    concept_id = concept_row["ID"]
-    info_rows = get_excel_rows(xls_path, INFO_SHEET_IDX, filter_key="Concept ID", filter_value=concept_id)
-    info_rows = list(info_rows)
+    wb = openpyxl.load_workbook(str(xls_path), read_only=read_only)
 
+    # сперва надо найти строку с концептом
+    concept_row = None
+
+    # искать его будем в листах, начинающихся на "Concepts"
+    for ws in wb.worksheets:
+
+        if not ws.title.startswith("Concepts"):
+            continue
+        if ws.max_row == 0:
+            continue
+
+        # определяем названия столбцов
+        concept_keys = [ws.cell(1, column).value for column in range(1, ws.max_column + 1)]
+
+        # определяем в каком столбце хранится concept.id
+        concept_id_column = concept_keys.index("ID") + 1
+        if concept_id_column is None:
+            raise Exception(f'Column "ID" not found in worksheet "{ws.title}"')
+
+        # определяем в каком столбце хранится concept.name
+        concept_name_column = concept_keys.index("Name") + 1
+        if concept_name_column is None:
+            raise Exception(f'Column "Name" not found in worksheet "{ws.title}"')
+
+        # ищем строку, совпадающую по имени
+        for row in range(2, ws.max_row + 1):
+            if ws.cell(row, concept_name_column).value == concept_name:
+                concept_row = {
+                    key: ws.cell(row, column).value
+                    for column, key in enumerate(concept_keys, start=1)
+                    if key is not None
+                }
+                break
+
+        if concept_row is not None:
+            break
+
+    if concept_row is None:
+        raise Exception("Concept row not found")
+
+    # теперь, зная id концепта, можно найти информацию по нему
+    concept_id = str(concept_row["ID"])
+    info_rows = []
+
+    # искать инфу будем в листах, начинающихся на "Info"
+    for ws in wb.worksheets:
+
+        if not ws.title.startswith("Info"):
+            continue
+        if ws.max_row == 0:
+            continue
+
+        # определяем названия столбцов
+        info_keys = [ws.cell(1, column).value for column in range(1, ws.max_column + 1)]
+
+        # определяем в каком столбце хранится info.concept_id
+        concept_id_column = info_keys.index("Concept ID") + 1
+        if concept_id_column is None:
+            raise Exception(f'Column "Concept ID" not found in worksheet "{ws.title}"')
+
+        # ищем строки, совпадающие по Concept ID
+        for row in range(2, ws.max_row + 1):
+            if str(ws.cell(row, concept_id_column).value) == concept_id:
+                info_row = {
+                    key: ws.cell(row, column).value
+                    for column, key in enumerate(info_keys, start=1)
+                    if key is not None
+                }
+                info_rows.append(info_row)
+
+    # делаем прямые ссылки на скриншоты
     for row in info_rows:
         screenshot = row.get("Screenshot")
         if not screenshot:
@@ -98,6 +134,7 @@ def main():
         else:
             row["Screenshot"] = f"https://thumb.cloud.mail.ru/weblink/thumb/xw1/{xxxx}/{yyyyyyyyy}"
 
+    # делаем html с помощью jinja2
     with open(TEMPLATE_PATH, "r", encoding="utf-8") as file:
         template_html = file.read()
 
@@ -108,8 +145,13 @@ def main():
     with open(html_path, "w", encoding="utf-8") as file:
         file.write(rendered_html)
 
+    # открываем полученный из шаблона html
     webbrowser.open(str(html_path), new=2)
 
 
 if __name__ == '__main__':
     main()
+
+
+# debug
+# C:\Users\Denis\PythonProjects\conceptz_excel\venv\Scripts\python C:\Users\Denis\PythonProjects\conceptz_excel\conceptz.py C:\Users\Denis\Desktop\CONCEPTZ\conceptz.xlsm Hemiola

@@ -1,5 +1,5 @@
 Private Sub Worksheet_BeforeDoubleClick(ByVal Target As Range, Cancel As Boolean)
 If Not Application.Intersect(Target, Range("B:B")) Is Nothing Then
-   Call Shell("C:\Users\Denis\PythonProjects\conceptz_excel\venv\Scripts\python C:\Users\Denis\PythonProjects\conceptz_excel\conceptz.py " & ThisWorkbook.Path & "\" & ThisWorkbook.Name & " " & Target)
+   Call Shell("C:\Users\Denis\PythonProjects\conceptz_excel\venv\Scripts\python C:\Users\Denis\PythonProjects\conceptz_excel\conceptz.py " & ThisWorkbook.Path & "\" & ThisWorkbook.Name & " """ & Target & """")
 End If
 End Sub

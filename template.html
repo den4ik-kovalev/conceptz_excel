@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ concept_row["Name"] }}</title>
+    <title>{{ concept["Name"] }}</title>
     <!-- Подключение Google Fonts и FontAwesome -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
@@ -73,7 +73,7 @@
         }
 
         /* Стили для заголовков */
-        h1, h2 {
+        h1, h2, h3 {
             color: #87CEFA; /* Светло-голубой цвет заголовков */
             text-transform: uppercase; /* Верхний регистр */
             font-weight: 700;
@@ -116,60 +116,60 @@
 <body>
     <div class="content-container">
         <!-- Заголовок страницы -->
-        <h1>{{ concept_row["Name"] }}</h1>
+        <h1>{{ concept["Name"] }}</h1>
 
-        {% if concept_row["Description"] %}
+        {% if concept["Description"] %}
         <!-- Краткое описание концепта -->
         <div class="description">
-            <p>{{ concept_row["Description"] }}</p>
+            <p>{{ concept["Description"] }}</p>
         </div>
         {% endif %}
 
-        {% set rows = info_rows|selectattr("Type", "in", ["note", "screenshot"]) %}
-        {% if rows %}
         <!-- Раздел Информация -->
         <h2>Информация <i class="fas fa-info-circle"></i></h2>
 
-        {% for row in rows %}
-        {% if row["Type"] == "screenshot" %}
-        <img src="{{ row['Screenshot'] }}" alt="{{ row['Text'] or '' }}">
-        {% if row["Source link"] or row["Text"] %}
-        <a href="{{ row['Source link'] or '#' }}" class="caption" target="_blank">{{ row['Text'] or 'Источник' }}</a>
-        {% endif %}
-        {% else %}
-        <a href="{{ row['Source link'] or '#' }}" target="_blank">
-            <div class="info-paragraph">
-                <p>{{ row['Text'] }}</p>
-            </div>
-        </a>
+        {% for note_group in notes %}
+        <div class="info-paragraph">
+            <h3>{{ note_group["Source name"] }}</h3>
+            <hr>
+            {% for note in note_group["Notes"] %}
+            <a href="{{ note['Source link'] or '#' }}" target="_blank">
+                <p>{{ note['Text'] }}</p>
+            </a>
+            <hr>
+            {% endfor %}
+        </div>
+        {% endfor %}
+
+        {% for screenshot in screenshots %}
+        <img src="{{ screenshot['Screenshot'] }}">
+        {% if screenshot["Source link"] or screenshot["Text"] %}
+        <a href="{{ screenshot['Source link'] or '#' }}" class="caption" target="_blank">{{ screenshot['Text'] or 'Источник' }}</a>
         {% endif %}
         {% endfor %}
-        {% endif %}
 
-        {% set rows = info_rows|selectattr("Type", "equalto", "source") %}
-        {% if rows %}
+        {% if sources %}
         <!-- Раздел Источники -->
         <h2>Источники <i class="fas fa-book"></i></h2>
         <div class="sources">
             <ul>
-                {% for row in rows %}
-                <li><a href="{{ row['Source link'] or '#' }}" target="_blank">{{ row['Source name'] }}</a></li>
+                {% for source in sources %}
+                <li><a href="{{ source['Source link'] or '#' }}" target="_blank">{{ source['Source name'] }}</a></li>
                 {% endfor %}
             </ul>
         </div>
         {% endif %}
 
-        {% set rows = info_rows|selectattr("Type", "equalto", "example") %}
-        {% if rows %}
+        {% if examples %}
         <!-- Раздел Примеры -->
         <h2>Примеры <i class="fas fa-lightbulb"></i></h2>
         <div class="examples">
             <ul>
-                {% for row in rows %}
-                {% if row['Source link'] %}
-                <li><a href="{{ row['Source link'] }}" target="_blank">{{ row['Text'] }}</a></li>
+                {% for example in examples %}
+                {% if example['Source link'] %}
+                <li><a href="{{ example['Source link'] }}" target="_blank">{{ example['Text'] }}</a></li>
                 {% else %}
-                <li>{{ row['Text'] }}</li>
+                <li>{{ example['Text'] }}</li>
                 {% endif %}
                 {% endfor %}
             </ul>

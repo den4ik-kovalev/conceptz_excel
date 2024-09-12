@@ -13,6 +13,7 @@ import argparse
 import os
 import sys
 import webbrowser
+from itertools import groupby
 from pathlib import Path
 
 import openpyxl
@@ -134,12 +135,37 @@ def main():
         else:
             row["Screenshot"] = f"https://thumb.cloud.mail.ru/weblink/thumb/xw1/{xxxx}/{yyyyyyyyy}"
 
+    # учитываем таймкоды
+    for row in info_rows:
+        if row["Timecode"]:
+            row["Source link"] = row["Source link"] + "?t=" + row["Timecode"]
+        del row["Timecode"]
+
+    # группируем информацию
+    sources = [ir for ir in info_rows if ir["Type"] == "source"]
+    examples = [ir for ir in info_rows if ir["Type"] == "example"]
+    screenshots = [ir for ir in info_rows if ir["Type"] == "screenshot"]
+    notes = [ir for ir in info_rows if ir["Type"] == "note"]
+    notes_groups = [
+        {
+            "Source name": key,
+            "Notes": list(group)
+        }
+        for key, group in groupby(notes, key=lambda x: x["Source name"])
+    ]
+
     # делаем html с помощью jinja2
     with open(TEMPLATE_PATH, "r", encoding="utf-8") as file:
         template_html = file.read()
 
     template = Template(template_html)
-    rendered_html = template.render(concept_row=concept_row, info_rows=info_rows)
+    rendered_html = template.render(
+        concept=concept_row,
+        sources=sources,
+        examples=examples,
+        screenshots=screenshots,
+        notes=notes_groups
+    )
     html_path = HTML_DIR / f"{concept_name}.html"
 
     with open(html_path, "w", encoding="utf-8") as file:
@@ -154,4 +180,4 @@ if __name__ == '__main__':
 
 
 # debug
-# C:\Users\Denis\PythonProjects\conceptz_excel\venv\Scripts\python C:\Users\Denis\PythonProjects\conceptz_excel\conceptz.py C:\Users\Denis\Desktop\CONCEPTZ\conceptz.xlsm Hemiola
+# C:\Users\Denis\PythonProjects\conceptz_excel\venv\Scripts\python C:\Users\Denis\PythonProjects\conceptz_excel\conceptz.py C:\Users\Denis\Desktop\CONCEPTZ\conceptz.xlsm Orchestration

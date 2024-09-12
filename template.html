@@ -35,15 +35,26 @@
         /* Стили для блока с описанием концепта и параграфов */
         .description, .info-paragraph, .sources, .examples {
             background-color: rgba(31, 31, 31, 0.85); /* Полупрозрачный фон */
-            padding: 30px; /* Увеличенные внутренние отступы */
-            border-radius: 10px; /* Скругленные углы */
-            margin-bottom: 30px; /* Увеличенный отступ снизу */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3); /* Тень */
+            padding: 30px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            width: 80%; /* Установим фиксированную ширину */
+            margin-left: auto;
+            margin-right: auto; /* Центрируем блоки */
+            max-width: 800px; /* Ограничение максимальной ширины */
+        }
+
+        /* Адаптивный дизайн для мобильных устройств */
+        @media (max-width: 768px) {
+            .description, .info-paragraph, .sources, .examples {
+                width: 95%; /* Ширина блоков на мобильных устройствах будет больше */
+            }
         }
 
         /* Стили для изображений */
         img {
-            width: 75%;
+            width: 80%;
             height: auto;
             display: block;
             margin: 20px auto;
@@ -125,6 +136,7 @@
         </div>
         {% endif %}
 
+        {% if notes %}
         <!-- Раздел Информация -->
         <h2>Информация <i class="fas fa-info-circle"></i></h2>
 
@@ -133,20 +145,30 @@
             <h3>{{ note_group["Source name"] }}</h3>
             <hr>
             {% for note in note_group["Notes"] %}
+            {% if note ["Text"] %}
             <a href="{{ note['Source link'] or '#' }}" target="_blank">
                 <p>{{ note['Text'] }}</p>
             </a>
+            {% endif %}
+            {% if note ["Screenshot"] %}
+            <img src="{{ note['Screenshot'] }}">
+            {% endif %}
             <hr>
             {% endfor %}
         </div>
         {% endfor %}
+        {% endif %}
 
+        {% if screenshots %}
+        <!-- Раздел Скриншоты -->
+        <h2>Скриншоты <i class="fas fa-camera"></i></h2>
         {% for screenshot in screenshots %}
         <img src="{{ screenshot['Screenshot'] }}">
         {% if screenshot["Source link"] or screenshot["Text"] %}
         <a href="{{ screenshot['Source link'] or '#' }}" class="caption" target="_blank">{{ screenshot['Text'] or 'Источник' }}</a>
         {% endif %}
         {% endfor %}
+        {% endif %}
 
         {% if sources %}
         <!-- Раздел Источники -->

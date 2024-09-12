@@ -141,6 +141,11 @@ def main():
             row["Source link"] = row["Source link"] + "?t=" + row["Timecode"]
         del row["Timecode"]
 
+    # сохраняем переносы строк
+    for row in info_rows:
+        if row["Text"]:
+            row["Text"] = str(row["Text"]).replace("\n", "<br>")
+
     # группируем информацию
     sources = [ir for ir in info_rows if ir["Type"] == "source"]
     examples = [ir for ir in info_rows if ir["Type"] == "example"]
